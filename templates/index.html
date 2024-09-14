@@ -106,13 +106,15 @@
         <ul class="collection">
             {% for task in current_tasks %}
             <li class="collection-item">
-                <div>
-                    <strong>{{ task.name }}</strong><br>
-                    <small>({{ format_date(task.start_date) }} {{ task.start_time }} - {{ format_date(task.end_date) }} {{ task.end_time }})</small><br>
-                    <small>{{ task.description }}</small>
-                    <form action="{{ url_for('delete_task') }}" method="POST" style="display: inline;">
+                <div class="task-content" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="task-info">
+                        <strong>{{ task.name }}</strong><br>
+                        <small>({{ format_date(task.start_date) }} {{ task.start_time }} - {{ format_date(task.end_date) }} {{ task.end_time }})</small><br>
+                        <small>{{ task.description }}</small>
+                    </div>
+                    <form action="{{ url_for('delete_task') }}" method="POST" style="margin-left: 20px;">
                         <input type="hidden" name="task_id" value="{{ loop.index0 }}">
-                        <button type="submit" class="btn red lighten-1 btn-small">Xoá</button>
+                        <button type="submit" class="btn red lighten-1 btn-small">Xóa</button>
                     </form>
                 </div>
             </li>
@@ -123,11 +125,13 @@
         <ul class="collection">
             {% for task in future_tasks %}
             <li class="collection-item">
-                <div>
-                    <strong>{{ task.name }}</strong><br>
-                    <small>({{ format_date(task.start_date) }} {{ task.start_time }} - {{ format_date(task.end_date) }} {{ task.end_time }})</small><br>
-                    <small>{{ task.description }}</small>
-                    <form action="{{ url_for('delete_task') }}" method="POST" style="display: inline;">
+                <div class="task-content" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="task-info">
+                        <strong>{{ task.name }}</strong><br>
+                        <small>({{ format_date(task.start_date) }} {{ task.start_time }} - {{ format_date(task.end_date) }} {{ task.end_time }})</small><br>
+                        <small>{{ task.description }}</small>
+                    </div>
+                    <form action="{{ url_for('delete_task') }}" method="POST" style="margin-left: 20px;">
                         <input type="hidden" name="task_id" value="{{ loop.index0 }}">
                         <button type="submit" class="btn red lighten-1 btn-small">Xóa</button>
                     </form>
