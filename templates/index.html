@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask To-Do App</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        function setEndDate() {
+            const startDate = document.getElementById('start_date').value;
+            const endDateField = document.getElementById('end_date');
+            
+            if (!endDateField.value) {
+                endDateField.value = startDate;
+            }
+        }
+
+      
+        function validateDate() {
+            const startDateValue = document.getElementById('start_date').value;
+            const startDate = new Date(startDateValue);
+            const unixTimeStartDate = Math.floor(startDate.getTime() / 1000);
+
+            const endDateValue = document.getElementById('end_date').value;
+            const endDate = new Date(endDateValue); 
+            const unixTimeEndDate = Math.floor(endDate.getTime() / 1000); 
+
+            if (unixTimeEndDate < unixTimeStartDate) {
+                alert("End date is not suitable!");
+                document.getElementById('end_date').value = '';              
+            }
+        }
+
+        function validateTime() {
+            const startDateInput = document.getElementById('start_date').value; 
+            const startTimeInput = document.getElementById('start_time').value; 
+
+            const endDateInput = document.getElementById('end_date').value; 
+            const endTimeInput = document.getElementById('end_time').value; 
+
+            const startDateTimeString = `${startDateInput}T${startTimeInput}`;
+            const endDateTimeString = `${endDateInput}T${endTimeInput}`;
+            
+            const startDateTime = new Date(startDateTimeString);
+            const endDateTime = new Date(endDateTimeString);
+
+            const unixStartDateTime = Math.floor(startDateTime.getTime() / 1000);
+            const unixEndDateTime = Math.floor(endDateTime.getTime() / 1000);
+
+            if (unixEndDateTime < unixStartDateTime) {
+                alert("End time is not suitable!");
+                document.getElementById("end_time").value = ''; 
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">My To-Do List</h1>
+        <form action="{{ url_for('add_task') }}" method="POST" class="mb-4">
+            <div class="form-group">
+                <input type="text" name="task_name" class="form-control" placeholder="Task Name" required>
+            </div>
+            <div class="form-group">
+                <input type="text" id="description" name="description" class="form-control" placeholder="Description(optional)">
+            </div>
+            <div class="form-group">
+                <label for="start_date">Start Date</label>
+                <input type="date" id="start_date" name="start_date" class="form-control" required onchange="setEndDate(); validateDate()">
+            </div>
+            <div class="form-group">
+                <label for="end_date">End Date</label>
+                <input type="date" id="end_date" name="end_date" class="form-control" onchange="validateDate()" required>
+            </div>
+            <div class="form-group">
+                <label for="start_time">Start Time</label>
+                <input type="time" id="start_time" name="start_time" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="end_time">End Time</label>
+                <input type="time" id="end_time" name="end_time" class="form-control" onchange="validateTime()" required>
+            </div>
+
+
+            <button type="submit" class="btn btn-primary btn-block">Add Task</button>
+        </form>
+
+        <h2>Current Tasks</h2>
+        <ul class="list-group">
+            {% for task in current_tasks %}
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ task.name }}</strong><br>
+                        <small>({{ task.start_date }} {{ task.start_time }} - {{ task.end_date }} {{ task.end_time }})</small><br>
+                        <small>{{ task.description }}</small>
+                    </div>
+                    <form action="{{ url_for('delete_task') }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="task_id" value="{{ loop.index0 }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <h2 class="mt-4">Future Tasks</h2>
+        <ul class="list-group">
+            {% for task in future_tasks %}
+            <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ task.name }}</strong><br>
+                        <small>({{ task.start_date }} {{ task.start_time }} - {{ task.end_date }} {{ task.end_time }})</small><br>
+                        <small>{{ task.description }}</small>
+                    </div>
+                    <form action="{{ url_for('delete_task') }}" method="POST" style="display: inline;">
+                        <input type="hidden" name="task_id" value="{{ loop.index0 }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</body>
+
+</html>
