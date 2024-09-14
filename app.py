@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import json
 import os
-from datetime import date
+from datetime import datetime, date
 
 app = Flask(__name__)
 
@@ -10,6 +10,13 @@ TASKS_FILE = r'data\tasks.json'
 
 # Global list to hold the tasks
 tasks = []
+
+# Helper function to format the date
+def format_date(date_string):
+    date_obj = datetime.strptime(date_string, '%Y-%m-%d')  # Parse the date string
+    return date_obj.strftime('%d/%m/%Y')  # Format it to 'dd/mm/yyyy'
+
+app.jinja_env.globals.update(format_date=format_date)
 
 # Load tasks from the JSON file into the globheheal `tasks` list
 def load_tasks():
