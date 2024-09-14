@@ -42,7 +42,7 @@
             const endDate = endDateField.date;
     
             if (endDate && endDate < startDate) {
-                alert("End date is not suitable!");
+                alert("Ngày kết thúc không phù hợp!");
                 endDateField.clear();  // Clear the end date if it is invalid
             }
         }
@@ -61,7 +61,7 @@
             const endDateTime = new Date(endDateTimeString);
     
             if (endDateTime < startDateTime) {
-                alert("End time is not suitable!");
+                alert("Thời gian kết thúc không phù hợp!");
                 document.getElementById("end_time").value = ''; 
             }
         }
@@ -102,7 +102,7 @@
             </div>
         </form>
 
-        <h2>Công việc hiện tại</h2>
+        <h2>Hiện tại</h2>
         <ul class="collection">
             {% for task in current_tasks %}
             <li class="collection-item">
@@ -121,7 +121,7 @@
             {% endfor %}
         </ul>
 
-        <h2 class="mt-4">Công việc trong tương lai</h2>
+        <h2 class="mt-4">Tương lai</h2>
         <ul class="collection">
             {% for task in future_tasks %}
             <li class="collection-item">
