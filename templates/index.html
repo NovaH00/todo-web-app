@@ -4,141 +4,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask To-Do App</title>
+    <title>Login and Sign Up - Flask App</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            var dateElems = document.querySelectorAll('.datepicker');
-            var datepickers = M.Datepicker.init(dateElems, {
-                format: 'yyyy-mm-dd',
-                onClose: function () {
-                    // Automatically set the end date to the start date if it's empty
-                    setEndDate();
+            var elems = document.querySelectorAll('.tabs');
+            M.Tabs.init(elems, {});
+
+            // Validate password confirmation
+            const signupPassword = document.getElementById('signup_password');
+            const confirmPassword = document.getElementById('signup_confirm_password');
+            confirmPassword.addEventListener('input', function () {
+                if (signupPassword.value !== confirmPassword.value) {
+                    confirmPassword.setCustomValidity("Passwords don't match");
+                } else {
+                    confirmPassword.setCustomValidity('');
                 }
             });
-            
-            var timeElems = document.querySelectorAll('.timepicker');
-            M.Timepicker.init(timeElems);
         });
-    
-        function setEndDate() {
-            const startDateField = M.Datepicker.getInstance(document.getElementById('start_date'));
-            const endDateField = M.Datepicker.getInstance(document.getElementById('end_date'));
-    
-            const startDate = startDateField.date;
-            
-            if (!endDateField.date && startDate) {
-                endDateField.setDate(startDate);
-                endDateField.doneBtn.click();  // Close the datepicker after setting the date
-            }
-        }
-    
-        function validateDate() {
-            const startDateField = M.Datepicker.getInstance(document.getElementById('start_date'));
-            const endDateField = M.Datepicker.getInstance(document.getElementById('end_date'));
-    
-            const startDate = startDateField.date;
-            const endDate = endDateField.date;
-    
-            if (endDate && endDate < startDate) {
-                alert("Ngày kết thúc không phù hợp!");
-                endDateField.clear();  // Clear the end date if it is invalid
-            }
-        }
-    
-        function validateTime() {
-            const startDateInput = document.getElementById('start_date').value; 
-            const startTimeInput = document.getElementById('start_time').value; 
-    
-            const endDateInput = document.getElementById('end_date').value; 
-            const endTimeInput = document.getElementById('end_time').value; 
-    
-            const startDateTimeString = `${startDateInput}T${startTimeInput}`;
-            const endDateTimeString = `${endDateInput}T${endTimeInput}`;
-            
-            const startDateTime = new Date(startDateTimeString);
-            const endDateTime = new Date(endDateTimeString);
-    
-            if (endDateTime < startDateTime) {
-                alert("Thời gian kết thúc không phù hợp!");
-                document.getElementById("end_time").value = ''; 
-            }
-        }
     </script>
-    
 </head>
 
 <body>
     <div class="container">
-        <h1 class="center-align">Lịch làm việc</h1>
-        <form action="{{ url_for('add_task') }}" method="POST" class="row">
-            <div class="input-field col s12">
-                <input type="text" id="task_name" name="task_name" required>
-                <label for="task_name">Tên công việc</label>
-            </div>
-            <div class="input-field col s12">
-                <input type="text" id="description" name="description">
-                <label for="description">Mô tả (không bắt buộc)</label>
-            </div>
-            <div class="input-field col s12 m6">
-                <input type="text" id="start_date" name="start_date" class="datepicker" required onchange="setEndDate(); validateDate();">
-                <label for="start_date">Ngày bắt đầu</label>
-            </div>
-            <div class="input-field col s12 m6">
-                <input type="text" id="end_date" name="end_date" class="datepicker" required onchange="validateDate();">
-                <label for="end_date">Ngày kết thúc</label>
-            </div>
-            <div class="input-field col s12 m6">
-                <input type="text" id="start_time" name="start_time" class="timepicker" required>
-                <label for="start_time">Giờ bắt đầu</label>
-            </div>
-            <div class="input-field col s12 m6">
-                <input type="text" id="end_time" name="end_time" class="timepicker" required onchange="validateTime();">
-                <label for="end_time">Giờ kết thúc</label>
-            </div>
+        <h1 class="center-align">Chào Mừng</h1>
+
+        <!-- Tabs -->
+        <div class="row">
             <div class="col s12">
-                <button type="submit" class="btn waves-effect waves-light">Thêm công việc</button>
+                <ul class="tabs">
+                    <li class="tab col s6"><a href="#login">Đăng nhập</a></li>
+                    <li class="tab col s6"><a href="#signup">Đăng ký</a></li>
+                </ul>
             </div>
-        </form>
 
-        <h2>Hiện tại</h2>
-        <ul class="collection">
-            {% for task in current_tasks %}
-            <li class="collection-item">
-                <div class="task-content" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="task-info">
-                        <strong>{{ task.name }}</strong><br>
-                        <small>({{ format_date(task.start_date) }} {{ task.start_time }} - {{ format_date(task.end_date) }} {{ task.end_time }})</small><br>
-                        <small>{{ task.description }}</small>
+            <!-- Login Form -->
+            <div id="login" class="col s12">
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Đăng nhập</span>
+                        <form action="{{ url_for('login') }}" method="POST">
+                            <div class="input-field">
+                                <input type="text" id="login_username" name="username" required>
+                                <label for="login_username">Tên đăng nhập</label>
+                            </div>
+                            <div class="input-field">
+                                <input type="password" id="login_password" name="password" required>
+                                <label for="login_password">Mật khẩu</label>
+                            </div>
+                            <div class="input-field">
+                                <button type="submit" class="btn waves-effect waves-light">Đăng nhập</button>
+                            </div>
+                        </form>
+                        {% with messages = get_flashed_messages() %}
+                            {% if messages %}
+                                <div class="card-panel red lighten-1">
+                                    <span class="white-text">
+                                        {% for message in messages %}
+                                            {{ message }}
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
                     </div>
-                    <form action="{{ url_for('delete_task') }}" method="POST" style="margin-left: 20px;">
-                        <input type="hidden" name="task_id" value="{{ loop.index0 }}">
-                        <button type="submit" class="btn red lighten-1 btn-small">Xóa</button>
-                    </form>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
+            </div>
 
-        <h2 class="mt-4">Tương lai</h2>
-        <ul class="collection">
-            {% for task in future_tasks %}
-            <li class="collection-item">
-                <div class="task-content" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="task-info">
-                        <strong>{{ task.name }}</strong><br>
-                        <small>({{ format_date(task.start_date) }} {{ task.start_time }} - {{ format_date(task.end_date) }} {{ task.end_time }})</small><br>
-                        <small>{{ task.description }}</small>
+            <!-- Sign Up Form -->
+            <div id="signup" class="col s12">
+                <div class="card">
+                    <div class="card-content">
+                        <span class="card-title">Đăng ký</span>
+                        <form action="{{ url_for('signup') }}" method="POST">
+                            <div class="input-field">
+                                <input type="text" id="signup_username" name="username" required>
+                                <label for="signup_username">Tên đăng nhập</label>
+                            </div>
+                            <div class="input-field">
+                                <input type="password" id="signup_password" name="password" required>
+                                <label for="signup_password">Mật khẩu</label>
+                            </div>
+                            <div class="input-field">
+                                <input type="password" id="signup_confirm_password" name="confirm_password" required>
+                                <label for="signup_confirm_password">Xác nhận mật khẩu</label>
+                            </div>
+                            <div class="input-field">
+                                <button type="submit" class="btn waves-effect waves-light">Đăng ký</button>
+                            </div>
+                        </form>
                     </div>
-                    <form action="{{ url_for('delete_task') }}" method="POST" style="margin-left: 20px;">
-                        <input type="hidden" name="task_id" value="{{ loop.index0 }}">
-                        <button type="submit" class="btn red lighten-1 btn-small">Xóa</button>
-                    </form>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
+            </div>
+        </div>
     </div>
 </body>
 
