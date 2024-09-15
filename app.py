@@ -9,8 +9,8 @@ import threading
 app = Flask(__name__)
 app.secret_key = 'this_is_a_very_secret_key'
 
-DATABASE_DIR = "data/database.db"
-BACKUP_DATABASE_DIR = "data/backup_database.db"
+DATABASE_DIR = "/home/novah00/todo-web-app/data/database.db"
+BACKUP_DATABASE_DIR = "/home/novah00/todo-web-app/data/backup_database.db"
 
 tasks = []
 
