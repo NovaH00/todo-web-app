@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,14 +9,20 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var elems = document.querySelectorAll('.tabs');
-            M.Tabs.init(elems, {});
+            var instance = M.Tabs.init(elems, {});
+
+            // Activate tab based on URL hash
+            if (window.location.hash) {
+                var activeTab = window.location.hash;
+                instance[0].select(activeTab.substring(1));  // Remove '#' from the hash
+            }
 
             // Validate password confirmation
             const signupPassword = document.getElementById('signup_password');
             const confirmPassword = document.getElementById('signup_confirm_password');
             confirmPassword.addEventListener('input', function () {
                 if (signupPassword.value !== confirmPassword.value) {
-                    confirmPassword.setCustomValidity("Passwords don't match");
+                    confirmPassword.setCustomValidity("Mật khẩu nhập lại không trùng!");
                 } else {
                     confirmPassword.setCustomValidity('');
                 }
@@ -41,9 +46,24 @@
 
             <!-- Login Form -->
             <div id="login" class="col s12">
+                <!-- Display login flash messages -->
+                {% with messages = get_flashed_messages(category_filter=['login']) %}
+                {% if messages %}
+                    <div class="card-panel red lighten-1">
+                        <span class="white-text">
+                            {% for message in messages %}
+                                {{ message }}
+                            {% endfor %}
+                        </span>
+                    </div>
+                {% endif %}
+                 {% endwith %}
                 <div class="card">
                     <div class="card-content">
                         <span class="card-title">Đăng nhập</span>
+
+                        
+
                         <form action="{{ url_for('login') }}" method="POST">
                             <div class="input-field">
                                 <input type="text" id="login_username" name="username" required>
@@ -57,26 +77,30 @@
                                 <button type="submit" class="btn waves-effect waves-light">Đăng nhập</button>
                             </div>
                         </form>
-                        {% with messages = get_flashed_messages() %}
-                            {% if messages %}
-                                <div class="card-panel red lighten-1">
-                                    <span class="white-text">
-                                        {% for message in messages %}
-                                            {{ message }}
-                                        {% endfor %}
-                                    </span>
-                                </div>
-                            {% endif %}
-                        {% endwith %}
                     </div>
                 </div>
             </div>
 
             <!-- Sign Up Form -->
             <div id="signup" class="col s12">
+                <!-- Display signup flash messages -->
+                {% with messages = get_flashed_messages(category_filter=['signup']) %}
+                {% if messages %}
+                    <div class="card-panel red lighten-1">
+                        <span class="white-text">
+                            {% for message in messages %}
+                                {{ message }}
+                            {% endfor %}
+                        </span>
+                    </div>
+                {% endif %}
+                {% endwith %}
                 <div class="card">
                     <div class="card-content">
                         <span class="card-title">Đăng ký</span>
+
+                        
+
                         <form action="{{ url_for('signup') }}" method="POST">
                             <div class="input-field">
                                 <input type="text" id="signup_username" name="username" required>
@@ -100,5 +124,4 @@
         </div>
     </div>
 </body>
-
 </html>

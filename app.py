@@ -3,20 +3,75 @@ import json
 from datetime import datetime, date
 import sqlite3
 from functools import wraps
+import time 
+import threading
 
 app = Flask(__name__)
 app.secret_key = 'this_is_a_very_secret_key'
 
+DATABASE_DIR = "data/database.db"
+BACKUP_DATABASE_DIR = "data/backup_database.db"
+
 tasks = []
 
 def format_date(date_string):
-    date_obj = datetime.strptime(date_string, '%Y-%m-%d')
+    date_obj = datetime.strptime(date_string, '%d-%m-%Y')
     return date_obj.strftime('%d/%m/%Y')
 
 app.jinja_env.globals.update(format_date=format_date)
 
+def backup_database():
+    try:
+        # Connect to the original database
+        connection = sqlite3.connect(DATABASE_DIR)
+        
+        # Create a new connection to the backup database
+        with sqlite3.connect(BACKUP_DATABASE_DIR) as backup_connection:
+            # Perform the backup
+            connection.backup(backup_connection)
+            print("Database backup completed successfully.")
+        
+        # Close the connection to the original database
+        connection.close()
+    
+    except Exception as e:
+        print(f"An error occurred during the backup: {e}")
+
+def backup_database_with_delay():
+    while True:
+        try:
+            # Connect to the original database
+            connection = sqlite3.connect(DATABASE_DIR)
+            
+            # Create a new connection to the backup database
+            with sqlite3.connect(BACKUP_DATABASE_DIR) as backup_connection:
+                # Perform the backup
+                connection.backup(backup_connection)
+                print("Database backup completed successfully.")
+            
+            # Close the connection to the original database
+            connection.close()
+        
+        except Exception as e:
+            print(f"An error occurred during the backup: {e}")
+        
+        # Wait for 1 hours before running the next backup
+        time.sleep(1*60*60)
+
+
+# Function to start the backup thread
+def start_backup_thread():
+    backup_thread = threading.Thread(target=backup_database_with_delay)
+    backup_thread.daemon = True  # Daemon thread will exit when the main program exits
+    backup_thread.start()
+
+# Start the backup thread when the Flask app starts
+with app.app_context():
+    start_backup_thread()
+
+
 def get_db():
-    conn = sqlite3.connect("data/database.db")
+    conn = sqlite3.connect(DATABASE_DIR)
     return conn
 
 def get_tasks(username):
@@ -51,7 +106,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'username' not in session:
-            flash('You need to log in to access this page.')
+            flash('Phải đăng nhập để tiếp tục.', 'login')
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
@@ -69,22 +124,68 @@ def login():
     if row and password == row[0]:
         session['username'] = username  # Store username in session
         get_tasks(username)
-        return redirect(url_for('home'))
+        return redirect(url_for('login_success'))
     else:
-        flash('Tên người dùng hoặc mật khẩu không đúng')
+        flash('Tên người dùng hoặc mật khẩu không đúng', 'login')
         return redirect(url_for('index'))
+
+
+import sqlite3
+
+def copy_row_from_backup(username):
+    # Connect to the backup database
+    backup_conn = sqlite3.connect(BACKUP_DATABASE_DIR)
+    backup_cursor = backup_conn.cursor()
+
+    # Connect to the main database
+    main_conn = sqlite3.connect(DATABASE_DIR)
+    main_cursor = main_conn.cursor()
+
+    try:
+        # Fetch the specific row from the backup database
+        backup_cursor.execute('SELECT id, username, password, tasks FROM users WHERE username = ?', (username,))
+        row = backup_cursor.fetchone()
+
+        if row:
+            # Insert the row into the main database
+            main_cursor.execute('INSERT OR REPLACE INTO users (id, username, password, tasks) VALUES (?, ?, ?, ?)', row)
+            main_conn.commit()
+            print(f"{username} copied successfully.")
+        else:
+            print(f"No row found with username {username} in the backup database.")
+    
+    except sqlite3.Error as e:
+        print(f"An error occurred: {e}")
+    
+    finally:
+        # Close the database connections
+        backup_conn.close()
+        main_conn.close()
+
+
+@app.route('/roll_back', methods=['POST'])
+@login_required
+def roll_back():
+    username = session['username']
+    copy_row_from_backup(username)
+    get_tasks(username)
+    return 'Roll back successful', 200
 
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('username', None)  # Remove the username from the session
-    flash('Bạn đã đăng xuất')
+    flash('Bạn đã đăng xuất', 'login')
     return redirect(url_for('index'))
 
-@app.route('/home')
+@app.route('/home', methods=["POST", "GET"])
 @login_required  # Use the login_required decorator
 def home():
     current_tasks, future_tasks = get_sorted_tasks()
     return render_template('home.html', current_tasks=current_tasks, future_tasks=future_tasks)
+
+@app.route('/login_success')
+def login_success():
+    return render_template('login_success.html')
 
 @app.route('/signup', methods=['POST'])
 def signup():
@@ -96,14 +197,14 @@ def signup():
     
     cursor.execute('SELECT COUNT(*) FROM users WHERE username = ?', (username,))
     if cursor.fetchone()[0] > 0:
-        flash('Tên đăng nhập đã tồn tại')
-        return redirect(url_for('index'))
+        flash('Tên đăng nhập đã tồn tại', 'signup')
+        return redirect(url_for('index') + '#signup')
     
     cursor.execute('INSERT INTO users (username, password, tasks) VALUES (?, ?, ?)', (username, password, '[]'))
     conn.commit()
     
-    flash('Đăng ký thành công, hãy đăng nhập để tiếp tục')
-    return redirect(url_for('index'))
+    flash('Đăng ký thành công, hãy đăng nhập để tiếp tục', 'login')
+    return redirect(url_for('index') + '#login')
 
 @app.route('/')
 def index():
@@ -168,6 +269,50 @@ def delete_task():
     conn.commit()
 
     return redirect(url_for('home'))
+
+
+
+
+
+@app.route('/admin', methods=['POST'])
+def admin():
+    if 'username' in session and session['username'] == 'admin':
+        pass
+@app.route('/change_password_btn')
+def change_password_btn():
+    return render_template('change_password.html') 
+
+@app.route('/change_password', methods=['POST'])
+@login_required
+def change_password():
+    username = session['username']
+    current_pass = request.form.get('current_password')
+    new_pass = request.form.get('new_password')
+    confirm_new_pass = request.form.get('confirm_new_password')
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT password FROM users WHERE username = ?", (username, )) 
+    old_password = cursor.fetchone()[0]
+    
+    
+    if current_pass != old_password:
+        flash("Sai mật khẩu", 'error')
+        conn.close()
+        return redirect(url_for('change_password_btn'))
+    elif new_pass != confirm_new_pass:
+        flash("Mật khẩu nhập lại khác mật khẩu mới", 'error')
+        conn.close()
+        return redirect(url_for('change_password_btn'))
+    else:
+        cursor.execute("UPDATE users SET password = ? WHERE username = ?", (new_pass, username))
+        conn.commit()
+        conn.close()
+        backup_database()
+        flash("Đổi mật khẩu thành công", "")
+        return redirect(url_for('change_password_btn'))
+    
+    
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

@@ -2,7 +2,7 @@ import sqlite3
 import json
 
 # Connect to SQLite database (creates the file if it doesn't exist)
-conn = sqlite3.connect(r'data\database.db')
+conn = sqlite3.connect(r'data\backup_database.db')
 cursor = conn.cursor()
 
 # Create the table with specified columns

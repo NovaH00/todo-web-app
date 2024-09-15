@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success - Flask App</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <style>
+        /* Use Flexbox to center the container */
+        body {
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center;     /* Center vertically */
+            height: 100vh;           /* Full height of the viewport */
+            margin: 0;               /* Remove default margin */
+        }
+
+        .container {
+            width: 90%;              /* Adjust width as needed */
+            max-width: 600px;        /* Optional max-width for better layout */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" >
+        
+        <div class="row">
+            <div class="col s12">
+                <div class="card-panel green lighten-1">
+                    <div class="center-align">
+                        <span class="white-text">Đăng nhập thành công</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col s12 center-align">
+                <a href="{{ url_for('index') }}" class="btn waves-effect waves-light">Về trang chủ</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
