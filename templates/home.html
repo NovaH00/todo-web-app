@@ -8,19 +8,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script>
-        // document.addEventListener('DOMContentLoaded', function () {
-        //     var dateElems = document.querySelectorAll('.datepicker');
-        //     var datepickers = M.Datepicker.init(dateElems, {
-        //         format: 'dd-mm-yyyy',
-        //         onClose: function () {
-        //             // Automatically set the end date to the start date if it's empty
-        //             setEndDate();
-        //         }
-        //     });
-
-        //     var timeElems = document.querySelectorAll('.timepicker');
-        //     M.Timepicker.init(timeElems);
-        // });
 
         document.addEventListener('DOMContentLoaded', function () {
             var dateElems = document.querySelectorAll('.datepicker');
@@ -64,53 +51,81 @@
                 alert("Ngày kết thúc không phù hợp!");
                 document.getElementById('end_date').value = document.getElementById('start_date').value;
             }
+
+        }
+        function parseTime(timeString) {
+            const [time, modifier] = timeString.split(' ');
+            let [hours, minutes] = time.split(':');
+
+            if (modifier === 'PM' && hours !== '12') {
+                hours = parseInt(hours, 10) + 12;
+            } else if (modifier === 'AM' && hours === '12') {
+                hours = '00';
+            }
+
+            return new Date(`1970-01-01T${hours}:${minutes}:00`);
         }
 
         function validateTime() {
-            const startDateInput = document.getElementById('start_date').value;
+            const startDateField = M.Datepicker.getInstance(document.getElementById('start_date'));
+            const endDateField = M.Datepicker.getInstance(document.getElementById('end_date'));
+            const startDate = startDateField.date;
+            const endDate = endDateField.date;
+
             const startTimeInput = document.getElementById('start_time').value;
-
-            const endDateInput = document.getElementById('end_date').value;
             const endTimeInput = document.getElementById('end_time').value;
+            
+            if(startTimeInput && endTimeInput && startDate.getTime() === endDate.getTime()){
+                const startTime = parseTime(startTimeInput);
+                const endTime = parseTime(endTimeInput);
 
-            // Ensure timepicker fields are in a format that JavaScript Date can parse
-            if (startDateInput && startTimeInput && endDateInput && endTimeInput) {
-                // Convert dd-mm-yyyy to yyyy-mm-dd
-                const formatDate = (dateStr) => {
-                    const [day, month, year] = dateStr.split('-');
-                    return `${year}-${month}-${day}`;
-                };
-
-                const startDateTimeString = `${formatDate(startDateInput)}T${startTimeInput}`;
-                const endDateTimeString = `${formatDate(endDateInput)}T${endTimeInput}`;
-
-                const startDateTime = new Date(startDateTimeString);
-                const endDateTime = new Date(endDateTimeString);
-
-                // Validate the times
-                if (endDateTime < startDateTime) {
-                    alert("Thời gian kết thúc không phù hợp!");
-                    document.getElementById("end_time").value = '';
+                if(endTime < startTime){
+                    alert("Thời gian kết thúc không phù hợp!")
+                    document.getElementById('end_time').value = '';
                 }
             }
+            
         }
 
 
         function confirmAction() {
-            userConfirmed = confirm('Bạn có muốn khôi phục dữ liệu của 1 tiếng trước?')
+            userConfirmed = confirm('Bạn có muốn khôi phục dữ liệu của 1 tiếng trước?');
+
             if (userConfirmed) {
                 fetch('/roll_back', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                 })
-            }
-            else {
-                fetch('/home', {
-                    method: "GET",
-
+                .then(response => {
+                    if (response.ok) {
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        console.error('Roll back failed');
+                    }
                 })
+                .catch(error => {
+                    console.error('Error during roll back:', error);
+                });
+            } else {
+                fetch('/home', {
+                    method: 'GET',
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Navigation to home successful, waiting 1 second before reload...');
+                        window.location.reload();
+                    } else {
+                        console.error('Navigation to home failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error during navigation:', error);
+                });
             }
         }
+
     </script>
 
 </head>
@@ -157,7 +172,7 @@
                 <label for="start_time">Giờ bắt đầu</label>
             </div>
             <div class="input-field col s12 m6">
-                <input type="text" id="end_time" name="end_time" class="timepicker" required onchange="validateTime();">
+                <input type="text" id="end_time" name="end_time" class="timepicker" required onchange="validateTime();" readonly>
                 <label for="end_time">Giờ kết thúc</label>
             </div>
             <div class="col s12">

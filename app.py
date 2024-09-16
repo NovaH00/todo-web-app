@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 import json
 from datetime import datetime, date
 import sqlite3
@@ -9,8 +9,12 @@ import threading
 app = Flask(__name__)
 app.secret_key = 'this_is_a_very_secret_key'
 
-DATABASE_DIR = "/home/novah00/todo-web-app/data/database.db"
-BACKUP_DATABASE_DIR = "/home/novah00/todo-web-app/data/backup_database.db"
+# DATABASE_DIR = "/home/novah00/todo-web-app/data/database.db"
+# BACKUP_DATABASE_DIR = "/home/novah00/todo-web-app/data/backup_database.db"
+
+DATABASE_DIR = "data/database.db"
+BACKUP_DATABASE_DIR = "data/backup_database.db"
+
 
 tasks = []
 
@@ -30,7 +34,7 @@ def backup_database():
             # Perform the backup
             connection.backup(backup_connection)
             print("Database backup completed successfully.")
-        
+
         # Close the connection to the original database
         connection.close()
     
@@ -56,7 +60,7 @@ def backup_database_with_delay():
             print(f"An error occurred during the backup: {e}")
         
         # Wait for 1 hours before running the next backup
-        time.sleep(1*60*60)
+        time.sleep(20)
 
 
 # Function to start the backup thread
@@ -89,17 +93,24 @@ def get_tasks(username):
         tasks = []
 
 # Get sorted tasks (current and future)
+
+
 def get_sorted_tasks():
     current_tasks = []
     future_tasks = []
 
     for task in tasks:
-        if task['start_date'] <= str(date.today()):
+        # Convert task['start_date'] to a datetime object (assuming format is 'DD-MM-YYYY')
+        task_start_date = datetime.strptime(task['start_date'], '%d-%m-%Y').date()
+        
+        # Compare with today's date
+        if task_start_date <= date.today():
             current_tasks.append(task)
         else:
             future_tasks.append(task)
 
     return current_tasks, future_tasks
+
 
 # Decorator to require login for protected routes
 def login_required(f):
@@ -169,7 +180,8 @@ def roll_back():
     username = session['username']
     copy_row_from_backup(username)
     get_tasks(username)
-    return 'Roll back successful', 200
+    
+    return jsonify({"status": "success"})
 
 @app.route('/logout', methods=['POST'])
 def logout():
@@ -278,6 +290,7 @@ def delete_task():
 def admin():
     if 'username' in session and session['username'] == 'admin':
         pass
+    
 @app.route('/change_password_btn')
 def change_password_btn():
     return render_template('change_password.html') 
