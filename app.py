@@ -17,6 +17,7 @@ BACKUP_DATABASE_DIR = "/home/novah00/todo-web-app/data/backup_database.db"
 
 
 tasks = []
+last_backup_time = 0
 
 def format_date(date_string):
     date_obj = datetime.strptime(date_string, '%d-%m-%Y')
