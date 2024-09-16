@@ -28,11 +28,39 @@
                 }
             });
         });
+
+
+        function updateRemainingTime() {
+            fetch('/remaining_time')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('remaining-time').innerText =
+                        `${data.hours}:${data.minutes}:${data.seconds} cho đến khi dữ liệu được sao lưu,`;
+                });
+        }
+
+        setInterval(updateRemainingTime, 1000); // Update every second
     </script>
+
+    <style>
+         .small-card {
+            width: 350px; /* Adjust width as needed */
+            height: 30px; /* Adjust height as needed */
+            display: flex;
+            align-items: center; /* Vertically center the content */
+            justify-content: center; /* Horizontally center the content */
+        }
+    </style>
 </head>
 
 <body>
+    
     <div class="container">
+        <div class="card small-card " > 
+                <p style="text-align: center; display: inline-block; padding-right: 5px;" id="remaining-time">00:00:00 cho đến khi dữ liệu được sao lưu,</p>
+                <a href="/backup_info"> đây là gì?</a>
+        </div>
+
         <h1 class="center-align">Chào Mừng</h1>
 
         <!-- Tabs -->

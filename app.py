@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta, time
 import sqlite3
 from functools import wraps
 import time 
@@ -42,6 +42,7 @@ def backup_database():
         print(f"An error occurred during the backup: {e}")
 
 def backup_database_with_delay():
+    global last_backup_time
     while True:
         try:
             # Connect to the original database
@@ -55,12 +56,16 @@ def backup_database_with_delay():
             
             # Close the connection to the original database
             connection.close()
+            
+            last_backup_time = datetime.now()
         
         except Exception as e:
             print(f"An error occurred during the backup: {e}")
         
         # Wait for 1 hours before running the next backup
-        time.sleep(20)
+
+        time.sleep(24*60*60)
+
 
 
 # Function to start the backup thread
@@ -122,6 +127,28 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
+@app.route('/remaining_time')
+def get_remaining_time():
+    global last_backup_time
+    now = datetime.now()
+    twenty_four_hours = timedelta(hours=24)
+    remaining_time = twenty_four_hours-(now - last_backup_time)
+    
+    if remaining_time.total_seconds() < 0:
+        remaining_time = timedelta(0)  # In case backup is overdue
+
+    return jsonify({
+        'hours': remaining_time.seconds // 3600,
+        'minutes': (remaining_time.seconds % 3600) // 60,
+        'seconds': remaining_time.seconds % 60
+    })
+
+@app.route('/backup_info', methods=["POST", "GET"])
+def backup_info():
+    print("called")
+    return render_template('backup_info.html')
+
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form['username']
@@ -135,7 +162,7 @@ def login():
     if row and password == row[0]:
         session['username'] = username  # Store username in session
         get_tasks(username)
-        return redirect(url_for('login_success'))
+        return redirect(url_for('home'))
     else:
         flash('Tên người dùng hoặc mật khẩu không đúng', 'login')
         return redirect(url_for('index'))
@@ -181,8 +208,16 @@ def roll_back():
     copy_row_from_backup(username)
     get_tasks(username)
     
-    return jsonify({"status": "success"})
+    return redirect(url_for('roll_back_success'))
 
+@app.route('/confirm_roll_back')
+def confirm_roll_back():
+    return render_template('confirm_roll_back.html')
+
+@app.route('/roll_back_success')
+def roll_back_success():
+    return render_template('roll_back_success.html')
+    
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('username', None)  # Remove the username from the session
@@ -283,14 +318,6 @@ def delete_task():
     return redirect(url_for('home'))
 
 
-
-
-
-@app.route('/admin', methods=['POST'])
-def admin():
-    if 'username' in session and session['username'] == 'admin':
-        pass
-    
 @app.route('/change_password_btn')
 def change_password_btn():
     return render_template('change_password.html') 
@@ -325,6 +352,36 @@ def change_password():
         flash("Đổi mật khẩu thành công", "")
         return redirect(url_for('change_password_btn'))
     
+
+
+def fetch_users_as_dict():
+    # Connect to the SQLite database
+    conn = sqlite3.connect(DATABASE_DIR)
+    
+    # To return rows as dictionaries
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    # Execute a query to get all users
+    cursor.execute("SELECT * FROM users")
+    
+    # Fetch all rows from the 'users' table
+    rows = cursor.fetchall()
+
+    # Convert each row to a dictionary and store in a list
+    users_list = [dict(row) for row in rows]
+
+    # Close the connection
+    conn.close()
+
+    return users_list
+
+
+@app.route('/admin', methods=['POST', 'GET'])
+def admin():
+    if 'username' in session and session['username'] == 'admin':
+        users = fetch_users_as_dict()
+        return render_template('admin.html', users=users)
     
 
 if __name__ == '__main__':

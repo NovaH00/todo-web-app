@@ -22,7 +22,7 @@
             var timeElems = document.querySelectorAll('.timepicker');
             var timepickers = M.Timepicker.init(timeElems);
 
-            timeElems.forEach(function(elem) {
+            timeElems.forEach(function (elem) {
                 elem.addEventListener('change', validateTime);
             });
         });
@@ -50,6 +50,7 @@
             if (endDate && endDate < startDate && document.getElementById('end_date').value != '') {
                 alert("Ngày kết thúc không phù hợp!");
                 document.getElementById('end_date').value = document.getElementById('start_date').value;
+                document.getElementById('end_time').value = '';
             }
 
         }
@@ -74,79 +75,82 @@
 
             const startTimeInput = document.getElementById('start_time').value;
             const endTimeInput = document.getElementById('end_time').value;
-            
-            if(startTimeInput && endTimeInput && startDate.getTime() === endDate.getTime()){
+
+            if (startTimeInput && endTimeInput && startDate.getTime() === endDate.getTime()) {
                 const startTime = parseTime(startTimeInput);
                 const endTime = parseTime(endTimeInput);
 
-                if(endTime < startTime){
+                if (endTime < startTime) {
                     alert("Thời gian kết thúc không phù hợp!")
                     document.getElementById('end_time').value = '';
+
                 }
             }
-            
+
         }
 
-
-        function confirmAction() {
-            userConfirmed = confirm('Bạn có muốn khôi phục dữ liệu của 1 tiếng trước?');
-
-            if (userConfirmed) {
-                fetch('/roll_back', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                })
-                .then(response => {
-                    if (response.ok) {
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1000);
-                    } else {
-                        console.error('Roll back failed');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error during roll back:', error);
+        function updateRemainingTime() {
+            fetch('/remaining_time')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('remaining-time').innerText =
+                        `${data.hours}:${data.minutes}:${data.seconds} cho đến khi dữ liệu được sao lưu,`;
                 });
-            } else {
-                fetch('/home', {
-                    method: 'GET',
-                })
-                .then(response => {
-                    if (response.ok) {
-                        console.log('Navigation to home successful, waiting 1 second before reload...');
-                        window.location.reload();
-                    } else {
-                        console.error('Navigation to home failed');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error during navigation:', error);
-                });
-            }
         }
 
+        setInterval(updateRemainingTime, 1000); // Update every second
     </script>
+    <style>
+        .small-card {
+            width: 350px;
+            /* Adjust width as needed */
+            height: 30px;
+            /* Adjust height as needed */
+            display: flex;
+            align-items: center;
+            /* Vertically center the content */
+            justify-content: center;
+            /* Horizontally center the content */
+        }
+    </style>
 
 </head>
 
 <body>
     <div class="container">
+
+
         <div class="right-align">
+            <div class="card small-card ">
+                <p style="text-align: center; display: inline-block; padding-right: 5px;" id="remaining-time">00:00:00
+                    cho đến khi dữ liệu được sao lưu,</p>
+                <a href="{{ url_for('backup_info')}}"> đây là gì?</a>
+            </div>
+            
             <span>Chào mừng, {{ session['username'] }}!</span>
             <form action="{{ url_for('logout') }}" method="POST" style="display: inline;">
                 <button type="submit" class="btn red lighten-1">Đăng xuất</button>
             </form>
         </div>
-        <div></div>
+
         <div class="right-align" style="margin-top: 20px;">
-            <form style="display: inline;" onsubmit="return confirmAction()">
+            <form action="{{ url_for('confirm_roll_back')}}" style="display: inline;">
                 <button type="submit" class="btn blue lighten-1">Khôi phục dữ liệu</button>
             </form>
             <form action="{{ url_for('change_password_btn') }}" style="display: inline;">
                 <button type="submit" class="btn blue lighten-1">Đổi mật khẩu</button>
             </form>
+
+
         </div>
+        {% if session.username == 'admin' %}
+        <div class="right-align" style="margin-top: 20px;">
+            <form action="{{ url_for('admin')}}" style="display: inline;">
+                <button type="submit" class="btn blue lighten-1">Admin</button>
+            </form>
+        </div>
+        {% endif %}
+
 
         <h1 class="center-align">Lịch làm việc</h1>
         <form action="{{ url_for('add_task') }}" method="POST" class="row">
@@ -164,7 +168,8 @@
                 <label for="start_date">Ngày bắt đầu</label>
             </div>
             <div class="input-field col s12 m6">
-                <input type="text" id="end_date" name="end_date" class="datepicker" required onchange="validateDate();" readonly>
+                <input type="text" id="end_date" name="end_date" class="datepicker" required onchange="validateDate();"
+                    readonly>
                 <label for="end_date">Ngày kết thúc</label>
             </div>
             <div class="input-field col s12 m6">
@@ -172,7 +177,8 @@
                 <label for="start_time">Giờ bắt đầu</label>
             </div>
             <div class="input-field col s12 m6">
-                <input type="text" id="end_time" name="end_time" class="timepicker" required onchange="validateTime();" readonly>
+                <input type="text" id="end_time" name="end_time" class="timepicker" required onchange="validateTime();"
+                    readonly>
                 <label for="end_time">Giờ kết thúc</label>
             </div>
             <div class="col s12">

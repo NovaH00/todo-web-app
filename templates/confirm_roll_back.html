@@ -22,11 +22,16 @@
     <div class="card-wrapper">
         <div class="card">
             <div class="card-content">
-                <span class="card-title center-align" >Đăng nhập thành công</span>
-                
+                <span class="card-title center-align" >Xác nhận</span>
+                <p>Bạn có chắc muốn khôi phục dữ liệu của 24 tiếng trước?</p>
             </div>
             <div class="card-action" style="display: flex; justify-content: space-between;">
-                <a href="{{ url_for('home') }}" class="btn left-align waves-effect waves-light">Về trang chủ</a>
+                <form action="{{ url_for('home')}}" style="display: inline;" >
+                    <button type="submit" class="btn red lighten-1">Từ chối</button>
+                </form>
+                <form action="{{ url_for('roll_back')}}" method="POST" style="display: inline;" >
+                    <button type="submit" class="btn green lighten-1">Đồng ý</button>
+                </form>
             </div>
         </div>
     </div>

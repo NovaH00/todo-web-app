@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - User Information</title>
+    <!-- Import Materialize CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <!-- Import Materialize JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+</head>
+<body>
+    <div class="card-action" style="display: flex; justify-content: space-between; padding-top: 50px; padding-left: 50px;">
+        <a href="{{ url_for('home') }}" class="btn left-align waves-effect waves-light">Về trang chủ</a>
+    </div>
+    <div class="container">
+        <h4 class="center-align">Thông tin người dùng</h4>
+        
+        <!-- User Information Table -->
+        <table class="striped centered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên người dùng</th>
+                    <th>Mật khẩu</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.password }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+ 
+    
+</body>
+</html>
