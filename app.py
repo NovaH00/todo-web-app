@@ -5,15 +5,15 @@ import sqlite3
 from functools import wraps
 import time 
 import threading
-
+ 
 app = Flask(__name__)
 app.secret_key = 'this_is_a_very_secret_key'
 
-DATABASE_DIR = "/home/novah00/todo-web-app/data/database.db"
-BACKUP_DATABASE_DIR = "/home/novah00/todo-web-app/data/backup_database.db"
+# DATABASE_DIR = "/home/novah00/todo-web-app/data/database.db"
+# BACKUP_DATABASE_DIR = "/home/novah00/todo-web-app/data/backup_database.db"
 
-# DATABASE_DIR = "data/database.db"
-# BACKUP_DATABASE_DIR = "data/backup_database.db"
+DATABASE_DIR = "data/database.db"
+BACKUP_DATABASE_DIR = "data/backup_database.db"
 
 
 tasks = []
@@ -131,19 +131,23 @@ def login_required(f):
 
 @app.route('/remaining_time')
 def get_remaining_time():
-    global last_backup_time
-    now = datetime.now()
-    twenty_four_hours = timedelta(hours=24)
-    remaining_time = twenty_four_hours-(now - last_backup_time)
-    
-    if remaining_time.total_seconds() < 0:
-        remaining_time = timedelta(0)  # In case backup is overdue
+    try:
+        global last_backup_time
+        now = datetime.now()
+        twenty_four_hours = timedelta(hours=24)
+        remaining_time = twenty_four_hours - (now - last_backup_time)
+        
+        if remaining_time.total_seconds() < 0:
+            remaining_time = timedelta(0)  # In case backup is overdue
 
-    return jsonify({
-        'hours': remaining_time.seconds // 3600,
-        'minutes': (remaining_time.seconds % 3600) // 60,
-        'seconds': remaining_time.seconds % 60
-    })
+        return jsonify({
+            'hours': remaining_time.seconds // 3600,
+            'minutes': (remaining_time.seconds % 3600) // 60,
+            'seconds': remaining_time.seconds % 60
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/backup_info', methods=["POST", "GET"])
 def backup_info():
