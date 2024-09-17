@@ -17,8 +17,7 @@ BACKUP_DATABASE_DIR = "/home/novah00/todo-web-app/data/backup_database.db"
 
 
 tasks = []
-last_backup_time = 0
-
+last_backup_time = datetime.now()
 def format_date(date_string):
     date_obj = datetime.strptime(date_string, '%d-%m-%Y')
     return date_obj.strftime('%d/%m/%Y')
@@ -140,10 +139,15 @@ def get_remaining_time():
         if remaining_time.total_seconds() < 0:
             remaining_time = timedelta(0)  # In case backup is overdue
 
+        
+        hours = f"{remaining_time.seconds // 3600}" if (remaining_time.seconds // 3600) >= 10 else f"0{remaining_time.seconds // 3600}"
+        mins = f"{(remaining_time.seconds % 3600) // 60}" if ((remaining_time.seconds % 3600) // 60) >= 10 else f"0{(remaining_time.seconds % 3600) // 60}"
+        secs = f"{remaining_time.seconds % 60}" if (remaining_time.seconds % 60) >= 10 else f"0{remaining_time.seconds % 60}"
+        
         return jsonify({
-            'hours': remaining_time.seconds // 3600,
-            'minutes': (remaining_time.seconds % 3600) // 60,
-            'seconds': remaining_time.seconds % 60
+            'hours': hours,
+            'minutes': mins,
+            'seconds': secs
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
