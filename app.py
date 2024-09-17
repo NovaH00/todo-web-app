@@ -20,11 +20,7 @@ BACKUP_DATABASE_DIR = "/home/novah00/todo-web-app/data/backup_database.db"
 
 tasks = []
 
-last_backup_time_str = os.getenv('LAST_BACKUP_TIME', None)
-if last_backup_time_str:
-    last_backup_time = datetime.fromisoformat(last_backup_time_str)
-else:
-    last_backup_time = datetime.now()
+last_backup_time = datetime.now()
 
 def format_date(date_string):
     date_obj = datetime.strptime(date_string, '%d-%m-%Y')
@@ -134,14 +130,6 @@ def login_required(f):
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
-
-@app.teardown_appcontext
-def store_variable():
-    global last_backup_time
-    last_backup_time_str = last_backup_time.isoformat()
-    set_key('data/.env', 'LAST_BACKUP_TIME', last_backup_time_str)
-
-
 
 
 @app.route('/remaining_time')
