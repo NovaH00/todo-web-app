@@ -89,16 +89,7 @@
 
         }
 
-        function updateRemainingTime() {
-            fetch('/remaining_time')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('remaining-time').innerText =
-                        `${data.hours}:${data.minutes}:${data.seconds} cho đến khi dữ liệu được sao lưu,`;
-                });
-        }
 
-        setInterval(updateRemainingTime, 1000); // Update every second
     </script>
     <style>
         .small-card {
@@ -121,11 +112,6 @@
 
 
         <div class="right-align">
-            <div class="card small-card ">
-                <p style="text-align: center; display: inline-block; padding-right: 5px;" id="remaining-time">00:00:00
-                    cho đến khi dữ liệu được sao lưu,</p>
-                <a href="{{ url_for('backup_info')}}"> đây là gì?</a>
-            </div>
             
             <span>Chào mừng, {{ session['username'] }}!</span>
             <form action="{{ url_for('logout') }}" method="POST" style="display: inline;">
@@ -134,9 +120,6 @@
         </div>
 
         <div class="right-align" style="margin-top: 20px;">
-            <form action="{{ url_for('confirm_roll_back')}}" style="display: inline;">
-                <button type="submit" class="btn blue lighten-1">Khôi phục dữ liệu</button>
-            </form>
             <form action="{{ url_for('change_password_btn') }}" style="display: inline;">
                 <button type="submit" class="btn blue lighten-1">Đổi mật khẩu</button>
             </form>

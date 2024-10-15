@@ -3,88 +3,27 @@ import json
 from datetime import datetime, date, timedelta, time
 import sqlite3
 from functools import wraps
-import time 
-import threading
-from dotenv import load_dotenv, set_key
-import os
+
  
 app = Flask(__name__)
 app.secret_key = 'this_is_a_very_secret_key'
 
-DATABASE_DIR = "/home/novah00/todo-web-app/data/database.db"
-BACKUP_DATABASE_DIR = "/home/novah00/todo-web-app/data/backup_database.db"
+# DATABASE_DIR = "/home/novah00/todo-web-app/data/database.db"
+# BACKUP_DATABASE_DIR = "/home/novah00/todo-web-app/data/backup_database.db"
 
-# DATABASE_DIR = "data/database.db"
-# BACKUP_DATABASE_DIR = "data/backup_database.db"
+DATABASE_DIR = "data/database.db"
+BACKUP_DATABASE_DIR = "data/backup_database.db"
 
 
 tasks = []
 
-last_backup_time_str = os.getenv('LAST_BACKUP_TIME', None)
-if last_backup_time_str:
-    last_backup_time = datetime.fromisoformat(last_backup_time_str)
-else:
-    last_backup_time = datetime.now()
+
 
 def format_date(date_string):
     date_obj = datetime.strptime(date_string, '%d-%m-%Y')
     return date_obj.strftime('%d/%m/%Y')
 
 app.jinja_env.globals.update(format_date=format_date)
-
-def backup_database():
-    try:
-        # Connect to the original database
-        connection = sqlite3.connect(DATABASE_DIR)
-        
-        # Create a new connection to the backup database
-        with sqlite3.connect(BACKUP_DATABASE_DIR) as backup_connection:
-            # Perform the backup
-            connection.backup(backup_connection)
-            print("Database backup completed successfully.")
-
-        # Close the connection to the original database
-        connection.close()
-    
-    except Exception as e:
-        print(f"An error occurred during the backup: {e}")
-
-def backup_database_with_delay():
-    global last_backup_time
-    while True:
-        try:
-            # Connect to the original database
-            connection = sqlite3.connect(DATABASE_DIR)
-            
-            # Create a new connection to the backup database
-            with sqlite3.connect(BACKUP_DATABASE_DIR) as backup_connection:
-                # Perform the backup
-                connection.backup(backup_connection)
-                print("Database backup completed successfully.")
-            
-            # Close the connection to the original database
-            connection.close()
-            
-            last_backup_time = datetime.now()
-        
-        except Exception as e:
-            print(f"An error occurred during the backup: {e}")
-        
-        # Wait for 1 hours before running the next backup
-
-        time.sleep(24*60*60)
-
-
-
-# Function to start the backup thread
-def start_backup_thread():
-    backup_thread = threading.Thread(target=backup_database_with_delay)
-    backup_thread.daemon = True  # Daemon thread will exit when the main program exits
-    backup_thread.start()
-
-# Start the backup thread when the Flask app starts
-with app.app_context():
-    start_backup_thread()
 
 
 def get_db():
@@ -134,14 +73,6 @@ def login_required(f):
             return redirect(url_for('index'))
         return f(*args, **kwargs)
     return decorated_function
-
-@app.teardown_appcontext
-def store_variable():
-    global last_backup_time
-    last_backup_time_str = last_backup_time.isoformat()
-    set_key('data/.env', 'LAST_BACKUP_TIME', last_backup_time_str)
-
-
 
 
 @app.route('/remaining_time')
@@ -195,53 +126,7 @@ def login():
 
 import sqlite3
 
-def copy_row_from_backup(username):
-    # Connect to the backup database
-    backup_conn = sqlite3.connect(BACKUP_DATABASE_DIR)
-    backup_cursor = backup_conn.cursor()
 
-    # Connect to the main database
-    main_conn = sqlite3.connect(DATABASE_DIR)
-    main_cursor = main_conn.cursor()
-
-    try:
-        # Fetch the specific row from the backup database
-        backup_cursor.execute('SELECT id, username, password, tasks FROM users WHERE username = ?', (username,))
-        row = backup_cursor.fetchone()
-
-        if row:
-            # Insert the row into the main database
-            main_cursor.execute('INSERT OR REPLACE INTO users (id, username, password, tasks) VALUES (?, ?, ?, ?)', row)
-            main_conn.commit()
-            print(f"{username} copied successfully.")
-        else:
-            print(f"No row found with username {username} in the backup database.")
-    
-    except sqlite3.Error as e:
-        print(f"An error occurred: {e}")
-    
-    finally:
-        # Close the database connections
-        backup_conn.close()
-        main_conn.close()
-
-
-@app.route('/roll_back', methods=['POST'])
-@login_required
-def roll_back():
-    username = session['username']
-    copy_row_from_backup(username)
-    get_tasks(username)
-    
-    return redirect(url_for('roll_back_success'))
-
-@app.route('/confirm_roll_back')
-def confirm_roll_back():
-    return render_template('confirm_roll_back.html')
-
-@app.route('/roll_back_success')
-def roll_back_success():
-    return render_template('roll_back_success.html')
     
 @app.route('/logout', methods=['POST'])
 def logout():
@@ -373,7 +258,6 @@ def change_password():
         cursor.execute("UPDATE users SET password = ? WHERE username = ?", (new_pass, username))
         conn.commit()
         conn.close()
-        backup_database()
         flash("Đổi mật khẩu thành công", "")
         return redirect(url_for('change_password_btn'))
     
